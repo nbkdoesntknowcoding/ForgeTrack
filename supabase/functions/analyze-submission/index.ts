@@ -138,7 +138,7 @@ Return STRICT JSON with this exact shape and no extra prose:
 }
 
 async function callGemini(prompt: string, apiKey: string): Promise<any> {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
