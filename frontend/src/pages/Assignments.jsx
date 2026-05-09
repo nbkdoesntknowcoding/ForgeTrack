@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { Card, CardContent } from '../components/ui/card';
-import { Plus, X, ClipboardList, Calendar } from 'lucide-react';
+import { Plus, X, ClipboardList, Calendar, Sparkles, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import RubricEditor from '../components/RubricEditor';
 
@@ -17,7 +17,10 @@ export default function Assignments() {
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [rubric, setRubric] = useState([{ criterion: '', weight: 100 }]);
+  const [showAnalysisToStudent, setShowAnalysisToStudent] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [genBusy, setGenBusy] = useState(false);
+  const [genError, setGenError] = useState(null);
 
   useEffect(() => { fetchAssignments(); }, []);
 
@@ -34,6 +37,33 @@ export default function Assignments() {
   const resetForm = () => {
     setTitle(''); setDescription(''); setDueDate('');
     setRubric([{ criterion: '', weight: 100 }]);
+    setShowAnalysisToStudent(false);
+    setGenError(null);
+  };
+
+  const generateRubric = async () => {
+    setGenBusy(true);
+    setGenError(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-rubric', {
+        body: { title, description, count: 6 },
+      });
+      if (error) {
+        let msg = error.message;
+        try { const body = await error.context?.json?.(); if (body?.error) msg = body.error; } catch { /* */ }
+        throw new Error(msg);
+      }
+      if (data?.error) throw new Error(data.error);
+      if (Array.isArray(data?.rubric) && data.rubric.length > 0) {
+        setRubric(data.rubric);
+      } else {
+        throw new Error('Empty rubric returned.');
+      }
+    } catch (err) {
+      setGenError(err.message || String(err));
+    } finally {
+      setGenBusy(false);
+    }
   };
 
   const handleCreate = async (e) => {
@@ -54,6 +84,7 @@ export default function Assignments() {
         description: description || null,
         due_date: dueDate || null,
         rubric,
+        show_analysis_to_student: showAnalysisToStudent,
         created_by: session?.user?.id ?? null,
       });
       if (error) throw error;
@@ -147,10 +178,28 @@ export default function Assignments() {
                   onChange={e => setTitle(e.target.value)} placeholder="e.g. Build a TODO API" />
               </div>
               <div>
-                <label className="text-label text-tertiary block mb-1">DESCRIPTION</label>
+                <div className="flex justify-between items-end mb-1">
+                  <label className="text-label text-tertiary">DESCRIPTION</label>
+                  <button
+                    type="button"
+                    onClick={generateRubric}
+                    disabled={genBusy || !title.trim() || !description.trim()}
+                    className="text-caption text-accent-glow hover:underline inline-flex items-center gap-1 disabled:opacity-50 disabled:no-underline"
+                    title={!title.trim() || !description.trim()
+                      ? 'Add a title and description first'
+                      : 'Generate rubric from this description'}
+                  >
+                    {genBusy
+                      ? <><Loader2 size={12} className="animate-spin" /> Generating…</>
+                      : <><Sparkles size={12} /> Generate rubric</>}
+                  </button>
+                </div>
                 <textarea className="input w-full min-h-[100px]" value={description}
                   onChange={e => setDescription(e.target.value)}
                   placeholder="What students should build, deliverables, constraints..." />
+                {genError && (
+                  <p className="text-caption text-danger-fg mt-1">Generate failed: {genError}</p>
+                )}
               </div>
               <div>
                 <label className="text-label text-tertiary block mb-1">DUE DATE (OPTIONAL)</label>
@@ -158,6 +207,20 @@ export default function Assignments() {
                   onChange={e => setDueDate(e.target.value)} />
               </div>
               <RubricEditor rubric={rubric} onChange={setRubric} />
+              <label className="flex items-start gap-2 text-body-sm text-secondary cursor-pointer pt-2 border-t border-border-subtle">
+                <input
+                  type="checkbox"
+                  checked={showAnalysisToStudent}
+                  onChange={(e) => setShowAnalysisToStudent(e.target.checked)}
+                  className="mt-1"
+                />
+                <span>
+                  <span className="text-primary">Share AI analysis with students</span>
+                  <span className="block text-caption text-tertiary mt-0.5">
+                    When students submit, they'll see their score, rubric breakdown, and AI feedback.
+                  </span>
+                </span>
+              </label>
             </div>
 
             <button type="submit" className="btn-primary w-full mt-8" disabled={isSaving}>

@@ -42,7 +42,7 @@ export function RoleRedirect() {
   if (userRole === 'mentor') {
     return <Navigate to="/dashboard" replace />;
   } else if (userRole === 'student') {
-    return <Navigate to="/me/attendance" replace />;
+    return <Navigate to="/me" replace />;
   }
 
   return <Navigate to="/login" replace />;

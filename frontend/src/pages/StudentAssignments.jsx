@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { Card, CardContent } from '../components/ui/card';
-import { ClipboardList, Calendar, CheckCircle2, X, Upload as UploadIcon } from 'lucide-react';
+import { ClipboardList, Calendar, CheckCircle2, X, Upload as UploadIcon, Sparkles, Loader2 } from 'lucide-react';
+import AnalysisPanel from '../components/AnalysisPanel';
 import { format, isAfter } from 'date-fns';
 import { isValidRepoUrl } from '../lib/github';
 
@@ -12,6 +13,7 @@ export default function StudentAssignments() {
 
   const [assignments, setAssignments] = useState([]);
   const [submissions, setSubmissions] = useState({}); // {assignment_id: submission}
+  const [analyses, setAnalyses] = useState({}); // {submission_id: analysis row}
   const [loading, setLoading] = useState(true);
 
   const [activeAssignment, setActiveAssignment] = useState(null);
@@ -31,6 +33,18 @@ export default function StudentAssignments() {
     const map = {};
     (sList || []).forEach(s => { map[s.assignment_id] = s; });
     setSubmissions(map);
+
+    // Fetch analyses for our submissions (RLS filters out hidden ones automatically).
+    const subIds = (sList || []).map((s) => s.id);
+    if (subIds.length > 0) {
+      const { data: aData } = await supabase
+        .from('submission_analyses')
+        .select('*')
+        .in('submission_id', subIds);
+      const aMap = {};
+      (aData || []).forEach((a) => { aMap[a.submission_id] = a; });
+      setAnalyses(aMap);
+    }
     setLoading(false);
   };
 
@@ -91,8 +105,25 @@ export default function StudentAssignments() {
       }, { onConflict: 'assignment_id,student_id' });
       if (error) throw error;
 
+      // Fetch the (just-upserted) submission row to get its id, then fire-and-forget
+      // the AI analysis. Don't block the UI on it.
+      const { data: sub } = await supabase
+        .from('submissions')
+        .select('id')
+        .eq('assignment_id', activeAssignment.id)
+        .eq('student_id', studentId)
+        .single();
+      if (sub?.id) {
+        supabase.functions
+          .invoke('analyze-submission', { body: { submission_id: sub.id } })
+          .then(() => fetchAll())
+          .catch((e) => console.error('Auto-analyze failed:', e));
+      }
+
       closeModal();
       fetchAll();
+      // Refresh again ~12s later to pick up the analysis result.
+      setTimeout(() => fetchAll(), 12000);
     } catch (err) {
       alert('Submission failed: ' + err.message);
     } finally {
@@ -159,6 +190,51 @@ export default function StudentAssignments() {
                       {submissions[a.id] ? 'Re-submit' : 'Submit'}
                     </button>
                   </div>
+
+                  {/* AI analysis (visible only when mentor toggled it on) */}
+                  {a.show_analysis_to_student && submissions[a.id] && (() => {
+                    const an = analyses[submissions[a.id].id];
+                    if (!an) {
+                      return (
+                        <div className="mt-4 text-caption text-tertiary inline-flex items-center gap-2 border-t border-border-subtle pt-3">
+                          <Loader2 size={12} className="animate-spin text-accent-glow" />
+                          AI is analyzing your submission…
+                        </div>
+                      );
+                    }
+                    if (an.status === 'pending' || an.status === 'running') {
+                      return (
+                        <div className="mt-4 text-caption text-tertiary inline-flex items-center gap-2 border-t border-border-subtle pt-3">
+                          <Loader2 size={12} className="animate-spin text-accent-glow" />
+                          Analyzing… this usually takes 10–30 seconds.
+                        </div>
+                      );
+                    }
+                    if (an.status === 'error') {
+                      return (
+                        <div className="mt-4 text-caption text-danger-fg border-t border-border-subtle pt-3">
+                          Analysis failed. Re-submit or contact your mentor.
+                        </div>
+                      );
+                    }
+                    if (an.status === 'done') {
+                      return (
+                        <details className="mt-4 border-t border-border-subtle pt-3">
+                          <summary className="cursor-pointer text-body-sm text-primary inline-flex items-center gap-2">
+                            <Sparkles size={14} className="text-accent-glow" />
+                            AI score: <span className={
+                              an.overall_score >= 80 ? 'text-success-fg'
+                              : an.overall_score >= 50 ? 'text-warning-fg' : 'text-danger-fg'
+                            }>{an.overall_score}</span> / 100 — click for details
+                          </summary>
+                          <div className="mt-3">
+                            <AnalysisPanel analysis={an} />
+                          </div>
+                        </details>
+                      );
+                    }
+                    return null;
+                  })()}
                 </CardContent>
               </Card>
             );

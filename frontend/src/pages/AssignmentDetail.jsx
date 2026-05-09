@@ -88,6 +88,23 @@ export default function AssignmentDetail() {
             </span>
           ))}
         </div>
+
+        <label className="inline-flex items-center gap-2 mt-4 text-body-sm cursor-pointer text-secondary hover:text-primary">
+          <input
+            type="checkbox"
+            checked={!!assignment.show_analysis_to_student}
+            onChange={async (e) => {
+              const next = e.target.checked;
+              const { error } = await supabase
+                .from('assignments')
+                .update({ show_analysis_to_student: next })
+                .eq('id', assignment.id);
+              if (error) { alert('Failed to update: ' + error.message); return; }
+              setAssignment({ ...assignment, show_analysis_to_student: next });
+            }}
+          />
+          Share AI analysis with students
+        </label>
       </div>
 
       <div>

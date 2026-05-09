@@ -183,9 +183,9 @@ Deno.serve(async (req: Request) => {
       { status: 401, headers: { ...CORS, "Content-Type": "application/json" } });
   }
   const { data: profile } = await userClient
-    .from("users").select("role").eq("id", userRes.user.id).single();
-  if (profile?.role !== "mentor") {
-    return new Response(JSON.stringify({ error: "Mentor role required" }),
+    .from("users").select("role, student_id").eq("id", userRes.user.id).single();
+  if (profile?.role !== "mentor" && profile?.role !== "student") {
+    return new Response(JSON.stringify({ error: "Mentor or student role required" }),
       { status: 403, headers: { ...CORS, "Content-Type": "application/json" } });
   }
 
@@ -200,6 +200,16 @@ Deno.serve(async (req: Request) => {
   } catch (e) {
     return new Response(JSON.stringify({ error: (e as Error).message }),
       { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
+  }
+
+  // Students can only analyze their own submission.
+  if (profile.role === "student") {
+    const { data: subOwner } = await admin
+      .from("submissions").select("student_id").eq("id", submissionId).single();
+    if (!subOwner || subOwner.student_id !== profile.student_id) {
+      return new Response(JSON.stringify({ error: "Forbidden" }),
+        { status: 403, headers: { ...CORS, "Content-Type": "application/json" } });
+    }
   }
 
   // Mark running.

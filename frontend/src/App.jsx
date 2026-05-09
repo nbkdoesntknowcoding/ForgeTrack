@@ -15,6 +15,7 @@ import Login from './pages/Login';
 import Forbidden from './pages/Forbidden';
 import Dashboard from './pages/Dashboard';
 import History from './pages/History';
+import StudentDetail from './pages/StudentDetail';
 import Materials from './pages/Materials';
 import Upload from './pages/Upload';
 import Assignments from './pages/Assignments';
@@ -22,10 +23,12 @@ import AssignmentDetail from './pages/AssignmentDetail';
 import SessionsHub from './pages/SessionsHub';
 import MarkingView from './pages/MarkingView';
 import CreateSessionDialog from './components/CreateSessionDialog';
+import StudentOverview from './pages/StudentOverview';
 import StudentAttendance from './pages/StudentAttendance';
 import StudentUpcoming from './pages/StudentUpcoming';
 import StudentMaterials from './pages/StudentMaterials';
 import StudentAssignments from './pages/StudentAssignments';
+import StudentResults from './pages/StudentResults';
 import Account from './pages/Account';
 
 const router = createBrowserRouter(
@@ -68,6 +71,11 @@ const router = createBrowserRouter(
               handle={{ crumb: () => ({ group: 'Activity', label: 'Student History' }) }}
             />
             <Route
+              path="history/:id"
+              element={<StudentDetail />}
+              handle={{ crumb: () => ({ group: 'Activity', label: 'Student' }) }}
+            />
+            <Route
               path="materials"
               element={<Materials />}
               handle={{ crumb: () => ({ group: 'Activity', label: 'Materials' }) }}
@@ -92,6 +100,11 @@ const router = createBrowserRouter(
           {/* Student */}
           <Route element={<RoleGuard allowedRoles={['student']} />}>
             <Route
+              path="me"
+              element={<StudentOverview />}
+              handle={{ crumb: () => ({ group: 'My Portal', label: 'Overview' }) }}
+            />
+            <Route
               path="me/attendance"
               element={<StudentAttendance />}
               handle={{ crumb: () => ({ group: 'My Portal', label: 'My Attendance' }) }}
@@ -110,6 +123,11 @@ const router = createBrowserRouter(
               path="me/assignments"
               element={<StudentAssignments />}
               handle={{ crumb: () => ({ group: 'My Portal', label: 'Assignments' }) }}
+            />
+            <Route
+              path="me/results"
+              element={<StudentResults />}
+              handle={{ crumb: () => ({ group: 'My Portal', label: 'Results' }) }}
             />
           </Route>
 

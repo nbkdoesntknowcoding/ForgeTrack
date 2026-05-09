@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard, CheckSquare, Users, BookOpen, Upload,
-  UserCheck, Calendar, LogOut, Hexagon, ClipboardList
+  UserCheck, Calendar, LogOut, Hexagon, ClipboardList, Award, Sparkles
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -22,10 +22,12 @@ export default function Sidebar() {
 
   const studentNav = [
     { label: 'My Portal', items: [
+      { name: 'Overview', path: '/me', icon: LayoutDashboard, exact: true },
       { name: 'My Attendance', path: '/me/attendance', icon: UserCheck },
       { name: 'Upcoming', path: '/me/upcoming', icon: Calendar },
-      { name: 'Materials', path: '/me/materials', icon: BookOpen },
       { name: 'Assignments', path: '/me/assignments', icon: ClipboardList },
+      { name: 'Materials', path: '/me/materials', icon: BookOpen },
+      { name: 'Results', path: '/me/results', icon: Award },
     ]}
   ];
 
@@ -54,6 +56,7 @@ export default function Sidebar() {
                   <NavLink
                     key={item.path}
                     to={item.path}
+                    end={item.exact}
                     className={({ isActive }) =>
                       `flex items-center gap-3 px-4 py-3 rounded-lg text-body transition-colors ${
                         isActive

@@ -18,10 +18,13 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const email = isMentor ? identifier.trim() : `${identifier.trim()}@forge.local`;
+      // Email lookup is case-insensitive in concept but our auth.users rows
+      // are stored lowercase. Normalize before submit.
+      const id = identifier.trim();
+      const email = isMentor ? id.toLowerCase() : `${id.toLowerCase()}@forge.local`;
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password
+        password,
       });
 
       if (error) {
