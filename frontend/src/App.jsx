@@ -24,6 +24,7 @@ import SessionsHub from './pages/SessionsHub';
 import MarkingView from './pages/MarkingView';
 import CreateSessionDialog from './components/CreateSessionDialog';
 import StudentOverview from './pages/StudentOverview';
+import Leaderboard from './pages/Leaderboard';
 import StudentAttendance from './pages/StudentAttendance';
 import StudentUpcoming from './pages/StudentUpcoming';
 import StudentMaterials from './pages/StudentMaterials';
@@ -96,6 +97,13 @@ const router = createBrowserRouter(
               handle={{ crumb: () => ({ group: 'Activity', label: 'Assignment' }) }}
             />
           </Route>
+
+          {/* Shared (any signed-in user) */}
+          <Route
+            path="leaderboard"
+            element={<Leaderboard />}
+            handle={{ crumb: () => ({ group: 'Activity', label: 'Leaderboard' }) }}
+          />
 
           {/* Student */}
           <Route element={<RoleGuard allowedRoles={['student']} />}>

@@ -3,93 +3,88 @@
 @tailwind utilities;
 
 :root {
-  /* Canvas & Surfaces */
-  --bg-void:            #07070B;   /* Outermost page background */
-  --bg-canvas:          #0B0B11;   /* Main app background */
-  --bg-surface:         #111118;   /* Default card background */
-  --bg-surface-raised:  #16161F;   /* Hover state, active nav item, modals */
-  --bg-surface-inset:   #0E0E14;   /* Input fields, inset wells */
+  /* Canvas & Surfaces — near-black gaming station */
+  --bg-void:            #07090C;
+  --bg-canvas:          #0A0E14;
+  --bg-surface:         #11161E;
+  --bg-surface-raised:  #161D27;
+  --bg-surface-inset:   #0D1218;
 
-  /* Borders */
-  --border-subtle:      rgba(255, 255, 255, 0.06);   /* Default card borders */
-  --border-default:     rgba(255, 255, 255, 0.10);   /* Stronger dividers */
-  --border-strong:      rgba(255, 255, 255, 0.16);   /* Focus rings, active states */
+  /* Borders — solid, opaque, harder than before */
+  --border-subtle:      #1F2A36;
+  --border-default:     #2A3A4A;
+  --border-strong:      #4A5C70;
+  --border-black:       #000000;
 
-  /* Text */
-  --text-primary:       #F5F5F7;   /* Headings, main content */
-  --text-secondary:     #8A8A94;   /* Labels, secondary info */
-  --text-tertiary:      #52525B;   /* Placeholder, disabled, captions */
-  --text-inverse:       #0B0B11;   /* For buttons on light bg (rare) */
+  /* Text — slightly green-tinted so headlines feel "energized" */
+  --text-primary:       #E8FFE3;
+  --text-secondary:     #8FA29E;
+  --text-tertiary:      #4A5560;
+  --text-inverse:       #07090C;
 
-  /* Accent — the cosmic glow */
-  --accent-glow:        #6366F1;   /* Indigo — used for top radial gradient and focus */
-  --accent-glow-soft:   rgba(99, 102, 241, 0.15);
+  /* Cyber palette */
+  --accent-glow:        #39FF14;   /* cyber green primary */
+  --accent-glow-soft:   rgba(57, 255, 20, 0.20);
 
-  /* Semantic — Present / Success */
-  --success-fg:         #10B981;
-  --success-bg:         rgba(16, 185, 129, 0.12);
-  --success-border:     rgba(16, 185, 129, 0.25);
+  /* Semantic — same neon family */
+  --success-fg:         #39FF14;   /* same as accent — wins are green */
+  --success-bg:         rgba(57, 255, 20, 0.10);
+  --success-border:     rgba(57, 255, 20, 0.40);
 
-  /* Semantic — Absent / Danger */
-  --danger-fg:          #F43F5E;
-  --danger-bg:          rgba(244, 63, 94, 0.12);
-  --danger-border:      rgba(244, 63, 94, 0.25);
+  --danger-fg:          #FF2D9F;   /* hot pink */
+  --danger-bg:          rgba(255, 45, 159, 0.10);
+  --danger-border:      rgba(255, 45, 159, 0.40);
 
-  /* Semantic — Warning */
-  --warning-fg:         #F59E0B;
-  --warning-bg:         rgba(245, 158, 11, 0.12);
-  --warning-border:     rgba(245, 158, 11, 0.25);
+  --warning-fg:         #FFC42B;   /* sodium yellow */
+  --warning-bg:         rgba(255, 196, 43, 0.10);
+  --warning-border:     rgba(255, 196, 43, 0.40);
 
-  /* Semantic — Info / Neutral highlight */
-  --info-fg:            #3B82F6;
-  --info-bg:            rgba(59, 130, 246, 0.12);
-  --info-border:        rgba(59, 130, 246, 0.25);
+  --info-fg:            #00B7FF;   /* electric blue */
+  --info-bg:            rgba(0, 183, 255, 0.10);
+  --info-border:        rgba(0, 183, 255, 0.40);
 
-  /* Typography */
-  --font-display: 'Satoshi', 'Inter', system-ui, sans-serif;
+  /* Typography — JetBrains Mono first for headlines (terminal/gaming feel) */
+  --font-display: 'JetBrains Mono', 'Satoshi', 'Inter', system-ui, monospace;
   --font-body:    'Inter', system-ui, sans-serif;
   --font-mono:    'JetBrains Mono', 'SF Mono', monospace;
 
-  /* Spacing Scale */
-  --space-1:   4px;
-  --space-2:   8px;
-  --space-3:   12px;
-  --space-4:   16px;
-  --space-5:   20px;
-  --space-6:   24px;
-  --space-8:   32px;
-  --space-10:  40px;
-  --space-12:  48px;
-  --space-16:  64px;
-  --space-20:  80px;
-  --space-24:  96px;
+  /* Spacing (unchanged) */
+  --space-1:  4px;  --space-2:  8px;  --space-3:  12px; --space-4:  16px;
+  --space-5:  20px; --space-6:  24px; --space-8:  32px; --space-10: 40px;
+  --space-12: 48px; --space-16: 64px; --space-20: 80px; --space-24: 96px;
 
-  /* Border Radius */
-  --radius-sm:    6px;
-  --radius-md:    10px;
-  --radius-lg:    14px;
-  --radius-xl:    18px;
-  --radius-2xl:   24px;
+  /* Border radius — sharper. Most things round to 4-6px max. */
+  --radius-sm:    2px;
+  --radius-md:    4px;
+  --radius-lg:    6px;
+  --radius-xl:    8px;
+  --radius-2xl:   10px;   /* down from 24 — anything calling 2xl gets a chunky-but-not-pillowy look */
   --radius-full:  9999px;
 
-  /* Shadows & Glows */
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 0 0 1px var(--border-subtle);
-  --shadow-raised: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--border-default);
-  --shadow-focus: 0 0 0 3px rgba(99, 102, 241, 0.25);
+  /* Brutalist shadows — hard offset, NO blur. Black for default, neon for emphasis. */
+  --shadow-card:   3px 3px 0 #000;
+  --shadow-raised: 6px 6px 0 #000;
+  --shadow-focus:  0 0 0 3px var(--accent-glow);
+  --shadow-glow:   6px 6px 0 var(--accent-glow);
+  --shadow-pink:   6px 6px 0 var(--danger-fg);
+  --shadow-blue:   6px 6px 0 var(--info-fg);
+
+  /* Subtle scanlines for hero panels */
+  --scanlines: repeating-linear-gradient(
+    0deg, transparent 0 2px, rgba(255,255,255,0.03) 2px 3px
+  );
+
+  /* Replaced legacy gradients (kept names for backwards-compat) */
   --glow-cosmic: radial-gradient(
-    ellipse 600px 300px at 50% -100px,
-    rgba(99, 102, 241, 0.18),
-    rgba(99, 102, 241, 0) 70%
+    ellipse 800px 400px at 50% -200px,
+    rgba(57, 255, 20, 0.10),
+    rgba(57, 255, 20, 0) 60%
   );
-  --card-gradient: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.02) 0%,
-    rgba(255, 255, 255, 0) 50%
-  );
+  --card-gradient: none;
 }
 
 body {
-  background: var(--bg-void);
+  background: var(--bg-canvas);
   color: var(--text-primary);
   font-family: var(--font-body);
   margin: 0;
@@ -98,77 +93,105 @@ body {
 }
 
 .app-main {
+  background-color: var(--bg-canvas);
   background-image: var(--glow-cosmic);
   min-height: 100vh;
 }
 
 @layer components {
+  /* Brutalist card — 3px solid border, hard offset shadow, no gradient */
   .card {
     background-color: var(--bg-surface);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-2xl);
+    border: 3px solid var(--border-strong);
+    border-radius: var(--radius-md);
     box-shadow: var(--shadow-card);
-    background-image: var(--card-gradient);
+    transition: transform 80ms ease-out, box-shadow 80ms ease-out;
   }
 
+  /* Tactile press: when card is also a button/link, it presses in on click. */
+  .card-tactile { cursor: pointer; }
+  .card-tactile:hover { box-shadow: 6px 6px 0 #000; transform: translate(-1px, -1px); }
+  .card-tactile:active { box-shadow: 0 0 0 #000; transform: translate(2px, 2px); }
+
+  /* Primary button — green fill, black text, brut shadow, press-in on click */
   .btn-primary {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    display: inline-flex; align-items: center; justify-content: center;
     gap: var(--space-2);
     padding: 10px 18px;
     border-radius: var(--radius-md);
     background: var(--accent-glow);
-    color: #fff;
-    font-weight: 500;
-    font-size: 14px;
-    transition: filter 120ms;
+    color: #000;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border: 3px solid #000;
+    box-shadow: var(--shadow-card);
+    transition: transform 80ms ease-out, box-shadow 80ms ease-out, filter 120ms;
   }
-  .btn-primary:hover { filter: brightness(1.1); }
-  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-primary:hover { box-shadow: 5px 5px 0 #000; transform: translate(-1px, -1px); }
+  .btn-primary:active { box-shadow: 0 0 0 #000; transform: translate(3px, 3px); }
+  .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: var(--shadow-card); }
 
+  /* Secondary button — surface fill, white text, brut shadow */
   .btn-secondary {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    display: inline-flex; align-items: center; justify-content: center;
     gap: var(--space-2);
     padding: 9px 16px;
     border-radius: var(--radius-md);
     background: var(--bg-surface-raised);
     color: var(--text-primary);
-    border: 1px solid var(--border-default);
-    font-weight: 500;
-    font-size: 14px;
-    transition: background 120ms;
+    border: 3px solid var(--border-strong);
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    box-shadow: var(--shadow-card);
+    transition: transform 80ms ease-out, box-shadow 80ms ease-out;
   }
-  .btn-secondary:hover { background: var(--bg-surface); }
+  .btn-secondary:hover { box-shadow: 5px 5px 0 #000; transform: translate(-1px, -1px); }
+  .btn-secondary:active { box-shadow: 0 0 0 #000; transform: translate(3px, 3px); }
+  .btn-secondary:disabled { opacity: 0.45; cursor: not-allowed; }
 
+  /* Input — chunky 3px border, no shadow, sharp */
   .input {
     background: var(--bg-surface-inset);
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-md);
+    border: 3px solid var(--border-default);
+    border-radius: var(--radius-sm);
     color: var(--text-primary);
-    padding: 10px 14px;
-    font-size: 14px;
+    padding: 9px 12px;
+    font-family: var(--font-mono);
+    font-size: 13px;
     transition: border-color 120ms, box-shadow 120ms;
   }
-  .input::placeholder { color: var(--text-tertiary); }
-  .input:focus { outline: none; border-color: var(--border-strong); box-shadow: var(--shadow-focus); }
-
-  .pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 3px 10px;
-    border-radius: var(--radius-full);
-    font-size: 12px;
-    font-weight: 500;
-    line-height: 1.4;
+  .input::placeholder { color: var(--text-tertiary); font-family: var(--font-mono); }
+  .input:focus {
+    outline: none;
+    border-color: var(--accent-glow);
+    box-shadow: 3px 3px 0 var(--accent-glow);
   }
-  .pill-success { background: var(--success-bg); color: var(--success-fg); border: 1px solid var(--success-border); }
-  .pill-danger  { background: var(--danger-bg);  color: var(--danger-fg);  border: 1px solid var(--danger-border); }
-  .pill-warning { background: var(--warning-bg); color: var(--warning-fg); border: 1px solid var(--warning-border); }
-  .pill-info    { background: var(--info-bg);    color: var(--info-fg);    border: 1px solid var(--info-border); }
+
+  /* Pill — 2px solid border, mono font, tight padding, no fill */
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.4;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: transparent;
+    border: 2px solid var(--border-strong);
+    color: var(--text-primary);
+  }
+  .pill-success { color: var(--success-fg); border-color: var(--success-fg); }
+  .pill-danger  { color: var(--danger-fg);  border-color: var(--danger-fg); }
+  .pill-warning { color: var(--warning-fg); border-color: var(--warning-fg); }
+  .pill-info    { color: var(--info-fg);    border-color: var(--info-fg); }
 }
 
 @layer utilities {
@@ -188,17 +211,42 @@ body {
   .bg-surface-inset  { background-color: var(--bg-surface-inset); }
   .bg-success-fg     { background-color: var(--success-fg); }
   .bg-danger-fg      { background-color: var(--danger-fg); }
+  .bg-warning-fg     { background-color: var(--warning-fg); }
+  .bg-info-fg        { background-color: var(--info-fg); }
+  .bg-accent-glow    { background-color: var(--accent-glow); }
 
   .border-border-subtle  { border-color: var(--border-subtle); }
   .border-border-default { border-color: var(--border-default); }
   .border-border-strong  { border-color: var(--border-strong); }
   .border-danger-border  { border-color: var(--danger-border); }
+  .border-success-fg     { border-color: var(--success-fg); }
+  .border-danger-fg      { border-color: var(--danger-fg); }
 
-  .text-h1       { font-size: 28px; line-height: 1.25; font-weight: 600; letter-spacing: -0.01em; }
-  .text-h2       { font-size: 22px; line-height: 1.3;  font-weight: 600; letter-spacing: -0.01em; }
-  .text-h3       { font-size: 18px; line-height: 1.4;  font-weight: 600; }
-  .text-body-lg  { font-size: 16px; line-height: 1.5; }
-  .text-body     { font-size: 14px; line-height: 1.5; }
-  .text-body-sm  { font-size: 13px; line-height: 1.5; }
-  .text-caption  { font-size: 12px; line-height: 1.4; }
+  .shadow-brut    { box-shadow: var(--shadow-card); }
+  .shadow-brut-lg { box-shadow: var(--shadow-raised); }
+  .shadow-glow    { box-shadow: var(--shadow-glow); }
+
+  /* Display sizes — chunky mono numerals for stats and hero numbers */
+  .text-display-lg { font-family: var(--font-display); font-size: 56px; line-height: 1.0; font-weight: 700; letter-spacing: -0.02em; }
+  .text-display-md { font-family: var(--font-display); font-size: 40px; line-height: 1.0; font-weight: 700; letter-spacing: -0.02em; }
+  .text-display-sm { font-family: var(--font-display); font-size: 32px; line-height: 1.0; font-weight: 700; letter-spacing: -0.02em; }
+
+  .text-h1       { font-family: var(--font-display); font-size: 28px; line-height: 1.2; font-weight: 700; letter-spacing: -0.01em; }
+  .text-h2       { font-family: var(--font-display); font-size: 22px; line-height: 1.25; font-weight: 700; }
+  .text-h3       { font-family: var(--font-display); font-size: 17px; line-height: 1.3; font-weight: 700; letter-spacing: 0.01em; }
+  .text-body-lg  { font-size: 16px; line-height: 1.55; }
+  .text-body     { font-size: 14px; line-height: 1.55; }
+  .text-body-sm  { font-size: 13px; line-height: 1.55; }
+  .text-caption  { font-family: var(--font-mono); font-size: 11px; line-height: 1.4; text-transform: uppercase; letter-spacing: 0.06em; }
+  .text-label    { font-family: var(--font-mono); font-size: 10px; line-height: 1.4; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; }
+
+  /* Tabular numerals everywhere a "stat" appears */
+  .tabular-nums { font-variant-numeric: tabular-nums; }
+
+  /* Subtle scanline overlay for hero strips */
+  .scanlines { background-image: var(--scanlines); }
+
+  /* Helper: tactile click-press for any button/card */
+  .tactile { transition: transform 80ms ease-out, box-shadow 80ms ease-out; }
+  .tactile:active { transform: translate(2px, 2px); box-shadow: 0 0 0 #000 !important; }
 }

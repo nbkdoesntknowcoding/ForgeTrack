@@ -5,6 +5,10 @@ import { CheckCircle2, XCircle, ClipboardList, Calendar, Sparkles, BookOpen } fr
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { Card, CardContent } from '../components/ui/card';
+import { computeStreak, computeXP, computeLevel, evaluateAchievements } from '../lib/gamification';
+import StreakBadge from '../components/StreakBadge';
+import XPBar from '../components/XPBar';
+import AchievementShelf from '../components/AchievementShelf';
 
 function pctTone(p) {
   if (p >= 90) return 'text-success-fg';
@@ -71,7 +75,24 @@ export default function StudentOverview() {
       ? data.nextSession
       : null;
 
-    return { pct, present, total, pending, submitted, avgScore, recent, todaySession, nextSession: data.nextSession };
+    // Gamification metrics
+    const aiScores = data.analyses
+      .filter((a) => a.status === 'done' && typeof a.overall_score === 'number')
+      .map((a) => a.overall_score);
+    const xp = computeXP({ presentCount: present, submittedCount: data.submissions.length, aiScores });
+    const levelInfo = computeLevel(xp);
+    const { days: streakDays } = computeStreak(data.attendance);
+    const achievements = evaluateAchievements({
+      attendanceRows: data.attendance,
+      submissions: data.submissions,
+      analyses: data.analyses,
+      assignments: data.assignments,
+    });
+
+    return {
+      pct, present, total, pending, submitted, avgScore, recent, todaySession, nextSession: data.nextSession,
+      xp, levelInfo, streakDays, achievements,
+    };
   }, [data]);
 
   if (!studentId) return <div className="text-secondary">Loading profile…</div>;
@@ -87,9 +108,19 @@ export default function StudentOverview() {
     <div className="space-y-6">
       <div>
         <h1 className="text-display-lg text-primary tracking-tight">
-          Welcome back, {userData?.display_name?.split(' ')[0] || 'student'}
+          {(userData?.display_name?.split(' ')[0] || 'STUDENT').toUpperCase()}
         </h1>
-        <p className="text-body-sm text-secondary mt-1">{format(new Date(), 'EEEE, MMM d')}</p>
+        <p className="text-body-sm text-secondary mt-1 font-mono">
+          {format(new Date(), 'EEE · MMM d · yyyy').toUpperCase()}
+        </p>
+      </div>
+
+      {/* Gaming chrome strip */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <StreakBadge days={stats.streakDays} />
+        <div className="md:col-span-2">
+          <XPBar levelInfo={stats.levelInfo} />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -150,6 +181,8 @@ export default function StudentOverview() {
           </CardContent>
         </Card>
       </div>
+
+      <AchievementShelf achievements={stats.achievements} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="rounded-[24px]">
