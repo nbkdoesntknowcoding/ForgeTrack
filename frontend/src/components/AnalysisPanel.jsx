@@ -55,6 +55,13 @@ export default function AnalysisPanel({ analysis }) {
         </div>
       )}
 
+      {analysis.raw_response?.frontend_verdict && analysis.raw_response.frontend_verdict !== 'n/a' && (
+        <div className="card p-3 border-info-fg/40 bg-info-fg/5">
+          <p className="text-label text-info-fg mb-1">FRONTEND VERIFICATION</p>
+          <p className="text-body-sm text-primary">{analysis.raw_response.frontend_verdict}</p>
+        </div>
+      )}
+
       {Array.isArray(analysis.rubric_scores) && analysis.rubric_scores.length > 0 && (
         <div>
           <p className="text-label text-tertiary mb-3">RUBRIC</p>

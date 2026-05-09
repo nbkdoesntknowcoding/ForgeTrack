@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { Card, CardContent } from '../components/ui/card';
-import { ClipboardList, Calendar, CheckCircle2, X, Upload as UploadIcon, Sparkles, Loader2 } from 'lucide-react';
+import { ClipboardList, Calendar, CheckCircle2, X, Upload as UploadIcon, Sparkles, Loader2, Lock, ExternalLink } from 'lucide-react';
 import AnalysisPanel from '../components/AnalysisPanel';
 import { format, isAfter } from 'date-fns';
 import { isValidRepoUrl } from '../lib/github';
@@ -18,6 +18,7 @@ export default function StudentAssignments() {
 
   const [activeAssignment, setActiveAssignment] = useState(null);
   const [githubUrl, setGithubUrl] = useState('');
+  const [frontendUrl, setFrontendUrl] = useState('');
   const [pdfFile, setPdfFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -52,16 +53,30 @@ export default function StudentAssignments() {
     const existing = submissions[a.id];
     setActiveAssignment(a);
     setGithubUrl(existing?.github_url || '');
+    setFrontendUrl(existing?.frontend_url || '');
     setPdfFile(null);
   };
 
-  const closeModal = () => { setActiveAssignment(null); setGithubUrl(''); setPdfFile(null); };
+  const closeModal = () => {
+    setActiveAssignment(null);
+    setGithubUrl(''); setFrontendUrl(''); setPdfFile(null);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isValidRepoUrl(githubUrl)) {
       alert('Please enter a valid GitHub repo URL (https://github.com/owner/repo).');
       return;
+    }
+    const fe = frontendUrl.trim();
+    if (fe) {
+      try {
+        const u = new URL(fe);
+        if (!/^https?:$/.test(u.protocol)) throw new Error('Must be http or https');
+      } catch {
+        alert('Frontend link must be a valid http(s) URL (e.g. https://my-app.vercel.app).');
+        return;
+      }
     }
     if (pdfFile && pdfFile.size > 10 * 1024 * 1024) {
       alert('PDF must be under 10 MB.');
@@ -100,6 +115,7 @@ export default function StudentAssignments() {
         assignment_id: activeAssignment.id,
         student_id: studentId,
         github_url: githubUrl,
+        frontend_url: frontendUrl.trim() || null,
         pdf_path: pdfPath,
         submitted_at: new Date().toISOString(),
       }, { onConflict: 'assignment_id,student_id' });
@@ -136,6 +152,15 @@ export default function StudentAssignments() {
     if (sub) return { label: 'Submitted', tone: 'success' };
     if (a.due_date && isAfter(new Date(), new Date(a.due_date))) return { label: 'Overdue', tone: 'danger' };
     return { label: 'Not submitted', tone: 'neutral' };
+  };
+
+  // Submissions are open until the END of the due date (23:59:59 local time).
+  // No due date = always open.
+  const isPastDeadline = (dueDate) => {
+    if (!dueDate) return false;
+    const eod = new Date(dueDate);
+    eod.setHours(23, 59, 59, 999);
+    return new Date() > eod;
   };
 
   if (!studentId) return <div className="text-secondary">Loading profile...</div>;
@@ -179,16 +204,54 @@ export default function StudentAssignments() {
                   <p className="text-body-sm text-tertiary mb-auto line-clamp-3">
                     {a.description || 'No description.'}
                   </p>
-                  <div className="mt-6 pt-4 border-t border-border-subtle flex justify-between items-center">
-                    {submissions[a.id] ? (
-                      <span className="text-caption text-secondary inline-flex items-center gap-1">
-                        <CheckCircle2 size={12} className="text-success-fg" />
-                        Submitted {format(new Date(submissions[a.id].submitted_at), 'MMM d, HH:mm')}
-                      </span>
-                    ) : <span />}
-                    <button onClick={() => openModal(a)} className="btn-primary text-body-sm">
-                      {submissions[a.id] ? 'Re-submit' : 'Submit'}
-                    </button>
+                  <div className="mt-6 pt-4 border-t border-border-subtle space-y-3">
+                    {submissions[a.id] && (
+                      <div className="space-y-1">
+                        <p className="text-caption text-secondary inline-flex items-center gap-1">
+                          <CheckCircle2 size={12} className="text-success-fg" />
+                          Submitted {format(new Date(submissions[a.id].submitted_at), 'MMM d, HH:mm')}
+                        </p>
+                        {submissions[a.id].frontend_url && (
+                          <a
+                            href={submissions[a.id].frontend_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-caption text-info-fg inline-flex items-center gap-1 hover:underline truncate max-w-full"
+                          >
+                            <ExternalLink size={11} />
+                            {submissions[a.id].frontend_url.replace(/^https?:\/\//, '').slice(0, 50)}
+                          </a>
+                        )}
+                      </div>
+                    )}
+                    {(() => {
+                      const locked = isPastDeadline(a.due_date);
+                      const hasSub = !!submissions[a.id];
+                      let label, disabled = false;
+                      if (locked && !hasSub) {
+                        label = (<><Lock size={12} /> Closed</>);
+                        disabled = true;
+                      } else if (locked && hasSub) {
+                        label = (<><Lock size={12} /> Locked · {format(new Date(a.due_date), 'MMM d')}</>);
+                        disabled = true;
+                      } else {
+                        label = hasSub ? 'Re-submit' : 'Submit';
+                      }
+                      return (
+                        <div className="flex items-center justify-between gap-2">
+                          {locked && hasSub
+                            ? <span className="text-caption text-tertiary">Resubmissions closed</span>
+                            : <span />}
+                          <button
+                            onClick={() => !disabled && openModal(a)}
+                            disabled={disabled}
+                            className="btn-primary text-body-sm inline-flex items-center gap-2 disabled:opacity-50"
+                          >
+                            {label}
+                          </button>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* AI analysis (visible only when mentor toggled it on) */}
@@ -274,6 +337,19 @@ export default function StudentAssignments() {
                   onChange={e => setGithubUrl(e.target.value)}
                 />
                 <p className="text-caption text-tertiary mt-1">Must be a public GitHub repository.</p>
+              </div>
+
+              <div>
+                <label className="text-label text-tertiary block mb-1">FRONTEND LINK (OPTIONAL)</label>
+                <input
+                  type="url" className="input w-full"
+                  placeholder="https://my-app.vercel.app"
+                  value={frontendUrl}
+                  onChange={e => setFrontendUrl(e.target.value)}
+                />
+                <p className="text-caption text-tertiary mt-1">
+                  Live deployment URL (Vercel, Netlify, GitHub Pages, etc.). The AI will fetch and verify it.
+                </p>
               </div>
 
               <div>

@@ -123,6 +123,7 @@ export default function AssignmentDetail() {
                     <th className="text-left p-4">STUDENT</th>
                     <th className="text-left p-4">SUBMITTED</th>
                     <th className="text-left p-4">REPO</th>
+                    <th className="text-left p-4">LIVE</th>
                     <th className="text-left p-4">PDF</th>
                     <th className="text-left p-4">SCORE</th>
                     <th className="text-right p-4">ACTION</th>
@@ -151,6 +152,15 @@ export default function AssignmentDetail() {
                               onClick={(e) => e.stopPropagation()}
                               className="inline-flex items-center gap-1 text-accent-glow hover:underline text-body-sm">
                               repo <ExternalLink size={12} />
+                            </a>
+                          ) : <span className="text-tertiary">—</span>}
+                        </td>
+                        <td className="p-4">
+                          {sub.frontend_url ? (
+                            <a href={sub.frontend_url} target="_blank" rel="noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="inline-flex items-center gap-1 text-info-fg hover:underline text-body-sm">
+                              live <ExternalLink size={12} />
                             </a>
                           ) : <span className="text-tertiary">—</span>}
                         </td>

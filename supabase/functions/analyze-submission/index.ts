@@ -98,6 +98,15 @@ function buildPrompt(args: {
   readme: string;
   tree: string[];
   files: { path: string; content: string }[];
+  frontendCheck?: {
+    url: string;
+    reachable: boolean;
+    status: number | null;
+    title: string;
+    description: string;
+    bodyExcerpt: string;
+    error: string | null;
+  } | null;
 }): string {
   const rubricBlock = args.rubric
     .map((r, i) => `${i + 1}. "${r.criterion}" (max ${r.weight} points)`)
@@ -106,6 +115,41 @@ function buildPrompt(args: {
   const filesBlock = args.files
     .map((f) => `--- FILE: ${f.path} ---\n${f.content}`)
     .join("\n\n");
+
+  let frontendBlock = "";
+  if (args.frontendCheck) {
+    const fc = args.frontendCheck;
+    if (fc.reachable) {
+      frontendBlock = `
+DEPLOYED FRONTEND (LIVE LINK):
+URL: ${fc.url}
+HTTP status: ${fc.status} (reachable ✓)
+Page title: ${fc.title || "(none)"}
+Meta description: ${fc.description || "(none)"}
+Body excerpt: ${fc.bodyExcerpt || "(empty)"}
+
+When scoring rubric items related to deployment / live demo / UI / functionality,
+account for whether the deployed frontend appears to match the assignment's
+intent based on the title and visible content above.
+`;
+    } else {
+      frontendBlock = `
+DEPLOYED FRONTEND (LIVE LINK):
+URL: ${fc.url}
+Reachable: NO — ${fc.error || "unknown error"}
+
+Treat this as a partial failure of any "deployment" / "live demo" rubric items.
+The student supplied a frontend URL but it could not be loaded.
+`;
+    }
+  } else {
+    frontendBlock = `
+DEPLOYED FRONTEND (LIVE LINK): (none provided)
+
+If the rubric or assignment description requires a live deployment, score that
+rubric item lower; otherwise ignore.
+`;
+  }
 
   return `You are a senior code reviewer evaluating a student's coding assignment.
 
@@ -124,7 +168,7 @@ ${args.tree.slice(0, 100).join("\n")}
 
 KEY SOURCE FILES (truncated):
 ${filesBlock}
-
+${frontendBlock}
 Return STRICT JSON with this exact shape and no extra prose:
 {
   "overall_score": <integer 0-100, normalized to /100>,
@@ -133,7 +177,8 @@ Return STRICT JSON with this exact shape and no extra prose:
   ],
   "summary": "<2-3 sentence overall verdict>",
   "strengths": ["<short bullet>", ...],
-  "weaknesses": ["<short bullet>", ...]
+  "weaknesses": ["<short bullet>", ...],
+  "frontend_verdict": "<one sentence about whether the live deployment, if any, satisfies the assignment intent; 'n/a' if no link provided>"
 }`;
 }
 
@@ -223,7 +268,7 @@ Deno.serve(async (req: Request) => {
   try {
     const { data: sub, error: subErr } = await admin
       .from("submissions")
-      .select("id, github_url, assignment_id, assignments(title, description, rubric)")
+      .select("id, github_url, frontend_url, assignment_id, assignments(title, description, rubric)")
       .eq("id", submissionId)
       .single();
     if (subErr || !sub) throw new Error("Submission not found");
@@ -231,6 +276,64 @@ Deno.serve(async (req: Request) => {
 
     const parsed = parseRepoUrl(sub.github_url);
     if (!parsed) throw new Error("Invalid GitHub URL");
+
+    // Verify the frontend URL (if provided) by fetching it. Capture status,
+    // page title, meta description, and a slice of body text for Gemini to assess.
+    let frontendCheck: {
+      url: string;
+      reachable: boolean;
+      status: number | null;
+      title: string;
+      description: string;
+      bodyExcerpt: string;
+      error: string | null;
+    } | null = null;
+
+    if (sub.frontend_url) {
+      try {
+        const url = sub.frontend_url.trim();
+        new URL(url); // throws on invalid
+        const ctrl = new AbortController();
+        const timeout = setTimeout(() => ctrl.abort(), 8000);
+        const res = await fetch(url, {
+          method: "GET",
+          headers: { "User-Agent": "ForgeTrack-Verifier/1.0" },
+          signal: ctrl.signal,
+          redirect: "follow",
+        });
+        clearTimeout(timeout);
+        const html = res.ok ? (await res.text()).slice(0, 30000) : "";
+        const title = (html.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1] || "").trim();
+        const description = (html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)/i)?.[1] || "").trim();
+        // Strip HTML for body excerpt
+        const bodyText = html
+          .replace(/<script[\s\S]*?<\/script>/gi, "")
+          .replace(/<style[\s\S]*?<\/style>/gi, "")
+          .replace(/<[^>]+>/g, " ")
+          .replace(/\s+/g, " ")
+          .trim()
+          .slice(0, 2000);
+        frontendCheck = {
+          url,
+          reachable: res.ok,
+          status: res.status,
+          title: title.slice(0, 200),
+          description: description.slice(0, 300),
+          bodyExcerpt: bodyText,
+          error: res.ok ? null : `HTTP ${res.status}`,
+        };
+      } catch (e) {
+        frontendCheck = {
+          url: sub.frontend_url,
+          reachable: false,
+          status: null,
+          title: "",
+          description: "",
+          bodyExcerpt: "",
+          error: (e as Error).message || String(e),
+        };
+      }
+    }
 
     const repoRes = await gh(`/repos/${parsed.owner}/${parsed.repo}`, GITHUB_TOKEN);
     if (!repoRes.ok) throw new Error(`Repo fetch failed (${repoRes.status})`);
@@ -256,6 +359,7 @@ Deno.serve(async (req: Request) => {
       readme,
       tree,
       files,
+      frontendCheck,
     });
 
     const result = await callGemini(prompt, GEMINI_KEY);
